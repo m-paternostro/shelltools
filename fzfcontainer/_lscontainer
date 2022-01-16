@@ -1,0 +1,18 @@
+#! /bin/sh
+
+# Outputs "up" containers in green and "exit" in red.
+
+containerCommand=$(if [ -x "$(command -v docker)" ]; then echo 'docker'; else echo 'podman'; fi)
+
+colorScape=$(printf '\033')
+colorUp="$colorScape[32m"
+colorDown="$colorScape[31m"
+colorNone="$colorScape[0m"
+
+${containerCommand} ps \
+  --all \
+  --size \
+  --no-trunc \
+  --format {{.ID}}==={{.Image}}==={{.Command}}==={{.Networks}}==={{.Ports}}==={{.CreatedAt}}==={{.Size}}==={{.Status}}==={{.Names}} \
+  | sed -E "s,(===Up.+)===(.+)$,\1===${colorUp}\2${colorNone}," \
+  | sed -E "s,(===Exit.+)===(.+)$,\1===${colorDown}\2${colorNone},"

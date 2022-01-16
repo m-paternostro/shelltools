@@ -1,0 +1,194 @@
+#! /bin/zsh
+
+option="$1"
+
+[[ -x $(command -v docker) ]] && containerCommand='docker' || containerCommand='podman'
+[[ -x $(command -v pbcopy) ]] && _fzfmatchClipboardCommand='pbcopy' || _fzfmatchClipboardCommand='xclip -selection clipboard'
+batCommand='bat --color=always --wrap=never --paging=always --file-name "{-1}:{2}"'
+
+commonOptions() {
+  local command="$1"
+  local preview="$2"
+  local header="$3"
+
+  local options=""
+  options="$options --preview '$preview'"
+
+  options="$options --bind 'ctrl-y:execute-silent(echo -n {-1} | $_fzfmatchClipboardCommand)'"
+  options="$options --bind 'ctrl-r:reload($command)'"
+  options="$options --bind 'alt-p:preview($preview)'"
+  options="$options --bind 'ctrl-k:execute($containerCommand system prune)'"
+  options="$options --bind 'ctrl-k:+reload($command)'"
+  options="$options --bind 'alt-j:preview($containerCommand system info | $batCommand --language json)'"
+  options="$options --bind 'ctrl-j:execute($containerCommand system info | $batCommand --language json)'"
+  options="$options --bind 'shift-left:preview-top'"
+  options="$options --bind 'shift-right:preview-bottom'"
+
+  options="$options --header '
+-------------------------
+ctrl-r reload
+ctrl-y yank
+alt-p  default preview
+-------------------------$header-------------------------
+(ctrl|alt)-j system info
+ctrl-k       system prune
+-------------------------
+
+'"
+
+  echo "$options"
+}
+
+case "$option" in
+  c*)
+    shift 1
+    ;&
+
+  '')
+    directory="${0:A:h}"
+    fzfCommand="$directory/_lscontainer"
+
+    preview='echo "
+status  : {8}
+ports   : {5}
+image   : {2}
+id      : {1}
+command : {3}
+networks: {4}
+created : {6}
+size    : {7}
+"'
+
+    header='
+(ctrl|alt)-i inspect
+(ctrl|alt)-e file diff
+(ctrl|alt)-l logs
+ctrl-t       stats
+-------------------------
+ctrl-a start
+ctrl-s stop
+ctrl-d remove
+ctrl-b exec --ti bash
+'
+
+    fzfOptions=$(commonOptions "$fzfCommand" "$preview" "$header")
+    fzfOptions="$fzfOptions --bind 'alt-i:preview($containerCommand container inspect {1} | $batCommand --language json)'"
+    fzfOptions="$fzfOptions --bind 'ctrl-i:execute($containerCommand container inspect {1} | $batCommand --language json)'"
+    fzfOptions="$fzfOptions --bind 'alt-e:preview($containerCommand container diff {1} | $batCommand)'"
+    fzfOptions="$fzfOptions --bind 'ctrl-e:execute($containerCommand container diff {1} | $batCommand)'"
+    fzfOptions="$fzfOptions --bind 'alt-l:preview($containerCommand container logs {1} 2>&1 | $batCommand --language log)'"
+    fzfOptions="$fzfOptions --bind 'ctrl-l:execute($containerCommand container logs -f {1} 2>&1 | bat --paging=never --language log --file-name "{-1}:{2}")'"
+    fzfOptions="$fzfOptions --bind 'ctrl-t:execute($containerCommand container stats {1})'"
+    fzfOptions="$fzfOptions --bind 'ctrl-b:execute($containerCommand exec -ti {1} bash)'"
+    fzfOptions="$fzfOptions --bind 'ctrl-a:execute-silent($containerCommand container start {1} 2>&1)'"
+    fzfOptions="$fzfOptions --bind 'ctrl-a:+reload($fzfCommand)'"
+    fzfOptions="$fzfOptions --bind 'ctrl-s:execute-silent($containerCommand container stop {1} 2>&1)'"
+    fzfOptions="$fzfOptions --bind 'ctrl-s:+reload($fzfCommand)'"
+    fzfOptions="$fzfOptions --bind 'ctrl-d:execute-silent($containerCommand container rm {1} 2>&1)'"
+    fzfOptions="$fzfOptions --bind 'ctrl-d:+reload($fzfCommand)'"
+    ;;
+
+  i*)
+    shift 1
+
+    fzfCommand="${containerCommand} image ls \
+      --all \
+      --format {{.ID}}==={{.Tag}}==={{.CreatedAt}}==={{.Size}}==={{.Repository}}"
+
+    preview='echo "
+tag    : {2}
+id     : {1}
+created: {3}
+size   : {4}"'
+
+    header='
+(ctrl|alt)-i inspect
+(ctrl|alt)-h history
+ctrl-d       remove
+'
+
+    fzfOptions=$(commonOptions "$fzfCommand" "$preview" "$header")
+    fzfOptions="$fzfOptions --bind 'ctrl-y:execute-silent(echo -n {-1}:{2} | $_fzfmatchClipboardCommand)'"
+    fzfOptions="$fzfOptions --bind 'alt-i:preview($containerCommand image inspect {1} | $batCommand --language json)'"
+    fzfOptions="$fzfOptions --bind 'ctrl-i:execute($containerCommand image inspect {1} | $batCommand --language json)'"
+    fzfOptions="$fzfOptions --bind 'alt-h:preview($containerCommand image history {1} | $batCommand)'"
+    fzfOptions="$fzfOptions --bind 'ctrl-h:execute($containerCommand image history {1} | $batCommand)'"
+    fzfOptions="$fzfOptions --bind 'ctrl-d:execute-silent($containerCommand image rm {1})'"
+    fzfOptions="$fzfOptions --bind 'ctrl-d:+reload($fzfCommand)'"
+    ;;
+
+  n*)
+    shift 1
+
+    if [ "$containerCommand" = 'docker' ]
+    then
+      fzfCommand="${containerCommand} network ls \
+        --format {{.ID}}==={{.Driver}}==={{.Scope}}==={{.Name}}"
+
+      preview='echo "
+id    : {1}
+driver: {2}
+scope : {3}"'
+    else
+      fzfCommand="${containerCommand} network ls \
+        --format {{.ID}}==={{.Plugins}}==={{.Name}}"
+
+      preview='echo "
+id     : {1}
+plugins: {2}"'
+    fi
+
+    header='
+(ctrl|alt)-i inspect
+ctrl-d       remove
+'
+
+    fzfOptions=$(commonOptions "$fzfCommand" "$preview" "$header")
+    fzfOptions="$fzfOptions --bind 'alt-i:preview($containerCommand network inspect {1} | $batCommand --language json)'"
+    fzfOptions="$fzfOptions --bind 'ctrl-i:execute($containerCommand network inspect {1} | $batCommand --language json)'"
+    fzfOptions="$fzfOptions --bind 'ctrl-d:execute-silent($containerCommand network rm {1})'"
+    fzfOptions="$fzfOptions --bind 'ctrl-d:+reload($fzfCommand)'"
+    ;;
+
+  v*)
+    shift 1
+
+    fzfCommand="${containerCommand} volume ls \
+      --format {{.Driver}}==={{.Scope}}==={{.Mountpoint}}==={{.Name}}"
+
+    preview='echo "
+id    : {1}
+driver: {2}
+scope : {3}
+mount : {4}"'
+
+    header='
+(ctrl|alt)-i inspect
+ctrl-d       remove
+'
+
+    fzfOptions=$(commonOptions "$fzfCommand" "$preview" "$header")
+    fzfOptions="$fzfOptions --bind 'alt-i:preview($containerCommand volume inspect {-1} | $batCommand --language json)'"
+    fzfOptions="$fzfOptions --bind 'ctrl-i:execute($containerCommand volume inspect {-1} | $batCommand --language json)'"
+    fzfOptions="$fzfOptions --bind 'ctrl-d:execute-silent($containerCommand volume rm {-1})'"
+    fzfOptions="$fzfOptions --bind 'ctrl-d:+reload($fzfCommand)'"
+    ;;
+
+  *)
+  echo "Usage: $(basename "$0") [type]"
+    echo "Possible Types:"
+    echo "  [containers]"
+    echo "  i[mages]"
+    echo "  n[etworks]"
+    echo "  v[olumes]"
+    exit 1
+esac
+
+FZF_DEFAULT_COMMAND="$fzfCommand" \
+FZF_DEFAULT_OPTS="$fzfOptions" \
+fzf \
+  --ansi \
+  --delimiter '===' --with-nth=-1 \
+  --cycle \
+  --layout=reverse \
+  "$@"
