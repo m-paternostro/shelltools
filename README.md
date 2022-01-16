@@ -11,7 +11,7 @@ A collection of shell tools I've created for fun and productivity.
   * [FZF](https://github.com/junegunn/fzf)
   * [Bat](https://github.com/sharkdp/bat)
 * Tested Environments:
-  * Mac (BigSur and Monterey)
+  * Mac (Big Sur and Monterey)
   * [Arch Linux](https://archlinux.org)
 
 * Instructions:
