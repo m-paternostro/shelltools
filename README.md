@@ -16,6 +16,7 @@ A collection of shell tools I've created for fun and productivity.
 
 * Instructions:
   * Copy the contents of the [fzfcontainer directory](./fzfcontainer) into a directory.
+    * See [path.sh](#pathsh) if you intend to use all shell tools.
   * Use it ;-)
 
     ```bash
@@ -39,12 +40,23 @@ A collection of shell tools I've created for fun and productivity.
   * Mac (Big Sur and Monterey)
   * [Arch Linux](https://archlinux.org)
 * Instructions
+  * Direct invocation to change the path of the current shell.
+
     ```bash
     # Clones the repository.
     git clone https://github.com/m-paternostro/shelltools.git
 
-    # Adds shell tools to the path.
+    # Adds the shell tools to the path.
     source shelltools/path.sh
+    ```
+
+  * Adding it to `~/.zshrc`
+    * This is how I am using the script.
+    * It assumes the repository was cloned into `~/bin`.
+
+    ```bash
+    # Adds the shell tools to the path.
+    [[ -d ~/bin/shelltools ]] && source ~/bin/shelltools/path.sh
     ```
 
 ## License
