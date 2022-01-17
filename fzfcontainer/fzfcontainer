@@ -3,7 +3,7 @@
 option="$1"
 
 [[ -x $(command -v docker) ]] && containerCommand='docker' || containerCommand='podman'
-[[ -x $(command -v pbcopy) ]] && _fzfmatchClipboardCommand='pbcopy' || _fzfmatchClipboardCommand='xclip -selection clipboard'
+[[ -x $(command -v pbcopy) ]] && clipboardCommand='pbcopy' || clipboardCommand='xclip -selection clipboard'
 batCommand='bat --color=always --wrap=never --paging=always --file-name "{-1}:{2}"'
 
 commonOptions() {
@@ -14,7 +14,7 @@ commonOptions() {
   local options=""
   options="$options --preview '$preview'"
 
-  options="$options --bind 'ctrl-y:execute-silent(echo -n {-1} | $_fzfmatchClipboardCommand)'"
+  options="$options --bind 'ctrl-y:execute-silent(echo -n {-1} | $clipboardCommand)'"
   options="$options --bind 'ctrl-r:reload($command)'"
   options="$options --bind 'alt-p:preview($preview)'"
   options="$options --bind 'ctrl-k:execute($containerCommand system prune)'"
@@ -108,7 +108,7 @@ ctrl-d       remove
 '
 
     fzfOptions=$(commonOptions "$fzfCommand" "$preview" "$header")
-    fzfOptions="$fzfOptions --bind 'ctrl-y:execute-silent(echo -n {-1}:{2} | $_fzfmatchClipboardCommand)'"
+    fzfOptions="$fzfOptions --bind 'ctrl-y:execute-silent(echo -n {-1}:{2} | $clipboardCommand)'"
     fzfOptions="$fzfOptions --bind 'alt-i:preview($containerCommand image inspect {1} | $batCommand --language json)'"
     fzfOptions="$fzfOptions --bind 'ctrl-i:execute($containerCommand image inspect {1} | $batCommand --language json)'"
     fzfOptions="$fzfOptions --bind 'alt-h:preview($containerCommand image history {1} | $batCommand)'"
