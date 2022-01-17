@@ -4,7 +4,7 @@ A collection of shell tools I've created for fun and productivity.
 
 ## fzfcontainer
 
-* Manage containers, images, networks, and volumes using FZF.
+* Manages containers, images, networks, and volumes using FZF.
 * Requirements:
   * [Z Shell](https://en.wikipedia.org/wiki/Z_shell)
   * [Docker](https://www.docker.com/) or [Podman](https://podman.io/)
@@ -19,17 +19,32 @@ A collection of shell tools I've created for fun and productivity.
   * Use it ;-)
 
     ```bash
-    # Manage containers
+    # Manages containers.
     ./fzfcontainer
 
-    # Manage images
+    # Manages images.
     ./fzfcontainer i
 
-    # Manage networks
+    # Manages networks.
     ./fzfcontainer n
 
-    # Manage volumes
+    # Manages volumes.
     ./fzfcontainer v
+    ```
+
+## path.sh
+
+* Adds all shell tools to the path.
+* Tested Environments
+  * Mac (Big Sur and Monterey)
+  * [Arch Linux](https://archlinux.org)
+* Instructions
+    ```bash
+    # Clones the repository.
+    git clone https://github.com/m-paternostro/shelltools.git
+
+    # Adds shell tools to the path.
+    source shelltools/path.sh
     ```
 
 ## License
