@@ -35,11 +35,11 @@ A collection of shell tools I've created for fun and productivity.
 
 ## path.sh
 
-* Adds all shell tools to the path.
-* Tested Environments
+* Adds the shell tools to the path.
+* Tested Environments:
   * Mac (Big Sur and Monterey)
   * [Arch Linux](https://archlinux.org)
-* Instructions
+* Instructions:
   * Direct invocation to change the path of the current shell.
 
     ```bash
